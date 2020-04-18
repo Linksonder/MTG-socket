@@ -9,10 +9,10 @@ var roomSchema = new mongoose.Schema({
     }],
     cards: [{
         playerNr: { type: Number },
-        isFlipped: { type: Boolean},
-        isTapped: { type: Boolean },
-        left: { type: String },
-        top: { type: String },
+        isFlipped: { type: Boolean, default: true},
+        isTapped: { type: Boolean, default: false },
+        left: { type: String, default: 0 },
+        top: { type: String, default: 0 },
         card: Object
     }],
 });
@@ -25,18 +25,17 @@ roomSchema.methods.getDeck = function(playerNr){
 }
 
 
-roomSchema.statics.updateCard = function(data){
-    console.log(data);
+roomSchema.statics.updateCard = function(card){
     return this.findOneAndUpdate({ 
         "_id": 'test', 
-        "cards._id": data.cardId, 
+        "cards._id": card._id, 
     }, 
     { 
         "$set": {
-            "cards.$.left": data.left,
-            "cards.$.top": data.top,
-            "cards.$.isFlipped": data.isFlipped,
-            "cards.$.isTapped": data.isTapped,
+            "cards.$.left": card.left,
+            "cards.$.top": card.top,
+            "cards.$.isFlipped": card.isFlipped,
+            "cards.$.isTapped": card.isTapped,
         }
     });
 }

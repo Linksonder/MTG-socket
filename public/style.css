@@ -1,0 +1,96 @@
+.btn-circle.btn-xl {
+    width: 70px;
+    height: 70px;
+    padding: 10px 16px;
+    border-radius: 35px;
+    font-size: 24px;
+    line-height: 1.33;
+}
+
+.btn-circle {
+    width: 30px;
+    height: 30px;
+    padding: 6px 0px;
+    border-radius: 15px;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.42857;
+}
+
+body, html {
+    height:100%;
+}
+
+#board{
+    width:100vw;
+    max-width:100%;  /* added for scroll bar*/ 
+    height:90vh;
+    position: relative;
+}
+
+.deck{
+    border:1px solid black;
+    position: absolute;
+    width:72px;
+    height:100px;
+}
+
+#deck-1 { left:5px; top: 5px}
+#deck-2 { right:5px; top: 5px}
+#deck-3 { right:5px; bottom: 5px}
+#deck-4 { left:5px; bottom: 5px}
+
+.card {
+    perspective: 1000px; /* Remove this if you don't want the 3D effect */
+    position: absolute;
+    width:72px;
+    height:100px;
+    transition: transform 0.8s;
+
+}
+
+.card .back, .card .front{
+    position: absolute;
+    -webkit-backface-visibility: hidden; /* Safari */
+    backface-visibility: hidden;
+    width:100%;
+    left:0px;
+}
+
+.card .back {
+    transform:rotateY(180deg);
+}
+
+.card.flip .card-inner {
+    transform:rotateY(180deg);
+}
+
+.card.tap .card-outer {
+    transform:rotateZ(90deg);
+}
+
+.card-inner, .card-outer {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.8s;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+}
+
+.card .menu {
+    width:100%;
+    position:absolute;
+    bottom:0;
+    display:none;
+}
+
+.card:hover .menu{
+    display:flex;
+}
+
+.card .menu button {
+    width:50%;
+    height:25px;
+}

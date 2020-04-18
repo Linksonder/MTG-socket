@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+  <head>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="/style.css" rel="stylesheet">
+
+    <title>MTG Socket</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/app.js"></script>
+
+  </head>
+  <body>
+
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <span>MTG - Sockets</span>             
+            <button type="button" class="btn btn-default btn-lg btn-circle"  data-toggle="modal"  data-target="#settings-modal">
+                <i class="fa fa-cog"></i>
+            </button>
+    </div>
+
+    <!-- content -->
+    <div id="board">
+     
+    </div>
+
+    <!-- modal -->
+    <div id="settings-modal" class="modal fade" role="dialog" >
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Room settings</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">Add cards</span>
+              </button>
+            </div>
+            <div class="modal-body">
+
+
+                <h2>Room</h2>
+
+                <button class="btn btn-default" id="reset-room">Reset</button>
+
+                <h2>Deck</h2>
+
+                <form id="add-cards"  method="post" action="/" >
+
+                    <!-- <label>Playername: </label><br>
+                    <input name="playername" id="playername" required> -->
+
+                    <label>Player nr (max 4): </label><br>
+                    <input name="playernr" id="playernr" required>
+
+                    <br>
+      
+                    <textarea name="cardlist" >Card 1</textarea>
+                    <input type="submit" value="Add">
+                </form>
+            
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  </body>
+</html>
