@@ -1,6 +1,11 @@
 var axios = require('axios');
 const querystring = require('querystring');
 
+function getCardByName(name) {
+    return axios.get("https://api.scryfall.com/cards/named?exact=" + querystring.escape(name))
+        .then(res => res.data)
+}
+
 function getCardsByName(names){
 
     let cards = names.map(n => split(n));
@@ -29,7 +34,8 @@ function getCardsByName(names){
 
 
 module.exports = {
-    getCardsByName: getCardsByName
+    getCardsByName: getCardsByName,
+    getCardByName: getCardByName
 }
 
 function split(str){

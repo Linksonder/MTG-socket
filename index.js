@@ -1,5 +1,6 @@
 require('dotenv').config()
 
+const shuffle = require('./shuffle.js');
 const express = require('express');
 let app = express();
 let http = require('http').createServer(app);
@@ -42,22 +43,45 @@ io.on('connection', (socket) => {
   })
 
   socket.on('set-deck', (request) => {
+    
     Room.findOne({ _id: 'test'}).then((room) => {
       scryfall.getCardsByName(request.cards).then(cards => {
-        
-        let playerNr = request.playerNr;
-        room.cards.pull({playerNr: playerNr});
+        scryfall.getCardByName(request.commander).then(commander => {
 
-        cards.forEach(c => { 
-          room.cards.push({ 
-            playerNr: playerNr,
-            card: c
+          let playerNr = request.playerNr;
+          room.cards.pull({playerNr: playerNr});
+  
+          cards.forEach(c => { 
+            room.cards.push({ 
+              playerNr: playerNr,
+              card: c
+            })
           })
+
+          //yay
+          shuffle(room.cards);
+
+          let commanderId =  mongoose.Types.ObjectId();
+
+          room.cards.push({
+            _id: commanderId,
+            isFlipped: false, //default is show it!
+            playerNr: playerNr,
+            isCommander: true,
+            card: commander
+          })
+
+          room.players[playerNr] = {
+            commander: commanderId
+          }
+                
+          room.save(() => { 
+            let deck = room.getDeck(playerNr);
+            io.emit('set-deck', deck);
+          });
         })
-              
-        room.save(() => { 
-          io.emit('set-deck', room.getDeck(playerNr));
-        });
+
+        
           
       })
      
@@ -65,15 +89,11 @@ io.on('connection', (socket) => {
   })
 
   socket.on('update-card', (card) => {
-    console.log(card.counters);
     Room.updateCard(card).then(() => {
       socket.broadcast.emit('update-card', card);
     })
   })
 });
-
-
-
 
 http.listen(process.env.PORT, () => {
   console.log('listening on *:3000');

@@ -14,14 +14,17 @@ var roomSchema = new mongoose.Schema({
         left: { type: String, default: 0 },
         top: { type: String, default: 0 },
         counters: { type: Number, default: 0},
+        isCommander: { type: Boolean, default: false },
         card: Object
     }],
 });
 
 roomSchema.methods.getDeck = function(playerNr){
+
+    let myCards = this.cards.filter(c => c.playerNr == playerNr);
     return {
         playerNr: playerNr,
-        cards: this.cards.filter(c => c.playerNr == playerNr)
+        cards: myCards,
     }
 }
 

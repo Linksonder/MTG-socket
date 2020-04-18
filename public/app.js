@@ -12,9 +12,13 @@ $(document).ready(() => {
     document.querySelector('#add-cards').addEventListener('submit', function(e){
         e.preventDefault();
 
+        let cards =  this.cardlist.value.split('\n')
+        let commander = this.commander.value;
+
         socket.emit('set-deck', {
             playerNr: this.playernr.value,
-            cards:  this.cardlist.value.split('\n')
+            cards:  cards,
+            commander: commander
         });
     })
 
@@ -32,9 +36,7 @@ $(document).ready(() => {
     })
 
     socket.on('set-deck', deck => {
-        deck.cards.forEach(c => {
-            let card = createCard(c, deck.playerNr)
-        })
+        deck.cards.forEach(c => createCard(c, deck.playerNr))
     })
 
 
@@ -92,6 +94,7 @@ $(document).ready(() => {
         container.setAttribute('id', 'card-' + card._id); //Card
         container.className += card.isFlipped ? " flip" : "";
         container.className += card.isTapped ? " tap" : "";
+        container.style.zIndex  = card.isCommander ? 1000 : 1; //put the commander on top
 
         //ui events
         let cardOuter = document.createElement('div');
@@ -178,7 +181,7 @@ $(document).ready(() => {
            let deck = document.querySelector('#deck-' + playerNr);
            container.style.left = deck.offsetLeft + "px";
            container.style.top = deck.offsetTop + "px";
-           $(container).addClass('flip'); //start face down on deck
+            $(container).addClass('flip'); //start face down on deck, except commanders
         }
         else{
             container.style.left = card.left + "px";

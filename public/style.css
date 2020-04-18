@@ -27,7 +27,7 @@ body, html {
 #board{
     width:100vw;
     max-width:100%;  /* added for scroll bar*/ 
-    height:80vh;
+    height:90vh;
     position: relative;
 }
 
@@ -36,6 +36,10 @@ body, html {
     position: absolute;
     width:72px;
     height:100px;
+}
+
+input.commander{
+    width:100%;
 }
 
 #deck-1 { left:5px; top: 5px}
@@ -73,11 +77,10 @@ body, html {
     transform:rotateY(180deg);
 }
 
-.card.peek {
-    border:2px solid red;
-}
 .card.peek .card-inner {
     transform:rotateY(0deg);
+    border:2px solid red;
+
 }
 
 .card.tap .card-outer {
@@ -139,4 +142,8 @@ body, html {
     -webkit-box-shadow: 3px -3px  5px  rgba(0,0,0,0.6);
     -o-box-shadow: 3px -3px  5px  rgba(0,0,0,0.6);
     border-radius:25px;
+}
+
+textarea.cardlist{
+    min-width: 100%;
 }

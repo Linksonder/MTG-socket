@@ -72,12 +72,12 @@
                     <input name="playername" id="playername" required> -->
 
                     <label>Player nr (max 4): </label><br>
-                    <input name="playernr" id="playernr" required>
-
-                    <br>
-      
-                    <textarea name="cardlist" >Card 1</textarea>
-                    <input type="submit" value="Add">
+                    <input type="number" name="playernr" id="playernr" required><br>
+                    <label>Commander </label><br>
+                    <input name="commander" id="commander" class="commander" required><br>
+                    <label>Decklist </label><br>      
+                    <textarea class="cardlist" name="cardlist" rows="10" >Card 1</textarea>
+                    <input class="btn btn-lg btn-success" type="submit" value="Save">
                 </form>
             
             </div>
