@@ -7,7 +7,7 @@ let mongoose = require('mongoose');
 
 let scryfall = require('./scryfall.js');
 
-mongoose.connect(process.env.DB_HOST)
+mongoose.connect(process.env.DB_HOST);
 require('./models/room.js');
 
 let Room = mongoose.model('Room');
@@ -31,47 +31,40 @@ io.on('connection', (socket) => {
     Room.deleteMany({}).then(() => {
       let room = new Room({ _id: 'test'});
       room.save(() => {
-        console.log('room created');
+        io.emit('init', room);
       });
     })
 
   })
 
   socket.on('set-deck', (request) => {
-    console.log("Setting decklist");
     Room.findOne({ _id: 'test'}).then((room) => {
-
-      let playerName = request.playerName;
       scryfall.getCardsByName(request.cards).then(cards => {
         
-        let player = room.players.find(p => p.name === playerName);
-        
-        if(!player){
-          room.players.push({
-            name: playerName,
-            cards: cards
+        let playerNr = request.playerNr;
+        room.cards.pull({playerNr: playerNr});
+
+        cards.forEach(c => { 
+          room.cards.push({ 
+            playerNr: playerNr,
+            card: c
           })
-        }
-        else{
-          player.cards = cards;
-        }
-       
+        })
+              
         room.save(() => { 
-          io.emit('set-deck', {
-            playerName: playerName,
-            cards: cards
-          });
+          io.emit('set-deck', room.getDeck(playerNr));
         });
-  
+          
       })
      
     })
   })
 
-  socket.on('move-card', (data) => {
-    io.emit('move-card', data);
+  socket.on('update-card', (data) => {
+    Room.updateCard(data).then(() => {
+      socket.broadcast.emit('update-card', data);
+    })
   })
-
 });
 
 

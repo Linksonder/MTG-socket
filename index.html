@@ -29,10 +29,85 @@
             line-height: 1.42857;
         }
 
-        #board img {
-            position: absolute;
-            height: 100px;
+        body, html {
+            height:100%;
         }
+
+        #board{
+            width:100vw;
+            max-width:100%;  /* added for scroll bar*/ 
+            height:90vh;
+            position: relative;
+        }
+
+        .deck{
+            border:1px solid black;
+            position: absolute;
+            width:72px;
+            height:100px;
+        }
+
+        #deck-1 { left:5px; top: 5px}
+        #deck-2 { right:5px; top: 5px}
+        #deck-3 { right:5px; bottom: 5px}
+        #deck-4 { left:5px; bottom: 5px}
+
+        .card {
+            perspective: 1000px; /* Remove this if you don't want the 3D effect */
+            position: absolute;
+            width:72px;
+            height:100px;
+            transition: transform 0.8s;
+
+        }
+
+        .card .back, .card .front{
+            position: absolute;
+            -webkit-backface-visibility: hidden; /* Safari */
+            backface-visibility: hidden;
+            width:100%;
+            left:0px;
+        }
+
+        .card .back {
+            transform:rotateY(180deg);
+            
+        }
+
+        .card.flip .card-inner {
+            transform:rotateY(180deg);
+        }
+
+        
+        .card.tap {
+            transform:rotateZ(90deg);
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+        }
+
+        .card .menu {
+            width:100%;
+            position:absolute;
+            top:100%;
+            display:none;
+        }
+
+        .card:hover .menu{
+            display:flex;
+        }
+
+        .card .menu button {
+            width:50%;
+            height:25px;
+        }
+
 
     </style>
   </head>
@@ -44,10 +119,11 @@
             <button type="button" class="btn btn-default btn-lg btn-circle"  data-toggle="modal"  data-target="#settings-modal">
                 <i class="fa fa-cog"></i>
             </button>
-            <!-- content -->
-            <div id="board">
+    </div>
 
-            </div>
+    <!-- content -->
+    <div id="board">
+     
     </div>
 
     <!-- modal -->
@@ -71,8 +147,11 @@
 
                 <form id="add-cards"  method="post" action="/" >
 
-                    <label>Playername: </label><br>
-                    <input name="playername" id="playername">
+                    <!-- <label>Playername: </label><br>
+                    <input name="playername" id="playername" required> -->
+
+                    <label>Player nr (max 4): </label><br>
+                    <input name="playernr" id="playernr" required>
 
                     <br>
       
@@ -95,10 +174,6 @@
         $(document).ready(() => {        
             
             var socket = io();
-            var lastCardId = 0;
-
-
-            $('#settings-modal').modal('show');
 
             document.querySelector('#reset-room').addEventListener('click', () => {
                 socket.emit('reset-room');
@@ -108,47 +183,129 @@
                 e.preventDefault();
 
                 socket.emit('set-deck', {
-                    playername: this.playername.value,
+                    playerNr: this.playernr.value,
                     cards:  this.cardlist.value.split('\n')
                 });
             })
 
+            socket.on('set-deck', deck => {
+                deck.cards.forEach(c => {
+                    let card = createCard(c, deck.playerNr)
+                })
+            })
+
+
             socket.on('init', (room) => {
-                room.players.forEach(p => {
-                    p.cards.forEach(c => {
-                        let card = createCard(c, p.playername)
-                    })
-                })
-            })
-
-            socket.on('set-deck', data => {
                 
-                console.log(data);
-                data.cards.forEach(c => {
-                    let card = createCard(c, data.playername)
+                if(!room)
+                    return socket.emit('reset-room');
+
+                //clear board 
+                resetBoard();
+
+                room.cards.forEach(c => {
+                    createCard(c, c.playerNr)
                 })
             })
 
-            socket.on('move-card', (data) => {
-                let card = document.querySelector('#' + data.cardId);
-                card.style.top = data.top;
-                card.style.left = data.left;
-            })
+ 
+            socket.on('update-card', (data) => {
+                let card = $('#card-' + data.cardId);            
+                data.isTapped ? card.addClass('tap') : card.removeClass('tap');    
+                data.isFlipped ? card.addClass('flip') : card.removeClass('flip');   
+                card.css({top: data.top, left: data.left });                             
+            });
 
-            function createCard(c, playername){
-                lastCardId++;
-                let card = document.createElement('img');
+            function resetBoard(){   
+                let board = document.querySelector('#board');
+                board.innerHTML = '';
+                for(let i = 0; i < 4; i++){
+                    let deck = document.createElement('div');
+                    deck.className = "deck";
+                    deck.setAttribute('id', 'deck-' + (i+1));
+                    board.appendChild(deck);
+                }
+            }
+
+            function createCard(c, playerNr){
+                let card = document.createElement('div');
                 card.setAttribute('draggable', 'true');
-                card.setAttribute('id', "card-" + lastCardId);
-                card.classList = "card " + playername;
+                card.setAttribute('id', 'card-' + c._id);
+                card.className = "card";
+
+                let cardInner = document.createElement('div');
+                cardInner.className = "card-inner";
+
+                let front = document.createElement('img');
+                front.className = "front";
+                front.setAttribute('src', c.card.image_uris.normal)
+
+
+                let back = document.createElement('img');
+                back.setAttribute('src', "https://gamepedia.cursecdn.com/mtgsalvation_gamepedia/thumb/f/f8/Magic_card_back.jpg/250px-Magic_card_back.jpg?version=56c40a91c76ffdbe89867f0bc5172888");
+                back.className = "back";
+
+                cardInner.appendChild(front);
+                cardInner.appendChild(back);
+
+                card.appendChild(cardInner);
+
+                let menu = document.createElement('div');
+                menu.className = 'menu';
+                let flip = document.createElement('button');
+                let flipicon = document.createElement('span');
+                flipicon.className = 'fa fa-eye';
+                flip.appendChild(flipicon);
+                let tap = document.createElement('button');
+                let tapicon = document.createElement('span');
+                tapicon.className = 'fa fa-redo';
+                tap.appendChild(tapicon);
+
+                menu.appendChild(flip);
+                menu.appendChild(tap);
+
+                card.appendChild(menu);
+
+                flip.addEventListener('click', () => {
+                    $(card).toggleClass('flip');
+                    sendUpdate(c._id, playerNr, card);
+                })
+
+                tap.addEventListener('click', () => {
+                    $(card).toggleClass('tap');
+                    sendUpdate(c._id, playerNr, card);
+                })
 
                 //pass drag event to socket
-                dragElement(card, (data) => {
-                    socket.emit('move-card', data);
+                dragElement(card, () => {
+                    sendUpdate(c._id, playerNr, card);
                 });
 
-                card.setAttribute('src', c.image_uris.normal)
+                if(c.left == null)
+                {
+                   let deck = document.querySelector('#deck-' + playerNr);
+                   card.style.left = deck.offsetLeft + "px";
+                   card.style.top = deck.offsetTop + "px";
+                   $(card).addClass('flip');
+                }
+                else{
+                    card.style.left = c.left + "px";
+                    card.style.top = c.top + "px";
+                }
+
                 document.querySelector('#board').appendChild(card);
+
+            }
+
+            function sendUpdate(cardId, playerNr, card){
+                socket.emit('update-card', { 
+                    playerNr, playerNr,
+                    cardId: cardId,
+                    isFlipped: $(card).hasClass('flip'),
+                    isTapped: $(card).hasClass('tap'),
+                    left: card.offsetLeft,
+                    top: card.offsetTop
+                })
             }
 
             function dragElement(elmnt, onMove) {
@@ -184,11 +341,9 @@
                     elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
                     elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
 
-                    onMove({
-                        cardId: elmnt.id,
-                        top: elmnt.style.top,
-                        left: elmnt.style.left
-                    });
+                    //callback
+                    onMove(elmnt.offsetLeft, elmnt.offsetTop);
+
                 }
 
                 function closeDragElement() {
