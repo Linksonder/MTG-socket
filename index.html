@@ -1,0 +1,207 @@
+<!doctype html>
+<html>
+  <head>
+    <title>MTG Socket</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+
+    <style>
+        .btn-circle.btn-xl {
+            width: 70px;
+            height: 70px;
+            padding: 10px 16px;
+            border-radius: 35px;
+            font-size: 24px;
+            line-height: 1.33;
+        }
+
+        .btn-circle {
+            width: 30px;
+            height: 30px;
+            padding: 6px 0px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 12px;
+            line-height: 1.42857;
+        }
+
+        #board img {
+            position: absolute;
+            height: 100px;
+        }
+
+    </style>
+  </head>
+  <body>
+
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <span>MTG - Sockets</span>             
+            <button type="button" class="btn btn-default btn-lg btn-circle"  data-toggle="modal"  data-target="#settings-modal">
+                <i class="fa fa-cog"></i>
+            </button>
+            <!-- content -->
+            <div id="board">
+
+            </div>
+    </div>
+
+    <!-- modal -->
+    <div id="settings-modal" class="modal fade" role="dialog" >
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Modal title</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">Add cards</span>
+              </button>
+            </div>
+            <div class="modal-body">
+
+
+                <h2>Room</h2>
+
+                <button class="btn btn-default" id="reset-room">Reset</button>
+
+                <h2>Deck</h2>
+
+                <form id="add-cards"  method="post" action="/" >
+
+                    <label>Playername: </label><br>
+                    <input name="playername" id="playername">
+
+                    <br>
+      
+                    <textarea name="cardlist" >Card 1</textarea>
+                    <input type="submit" value="Add">
+                </form>
+            
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+    <script>
+
+        var lastCardId = 0;
+
+        $(document).ready(() => {        
+            
+            var socket = io();
+
+
+            $('#settings-modal').modal('show');
+
+            document.querySelector('#reset-room').addEventListener('click', () => {
+                socket.emit('reset-room');
+            })
+            
+            document.querySelector('#add-cards').addEventListener('submit', function(e){
+                e.preventDefault();
+
+                socket.emit('set-deck', {
+                    playername: this.playername.value,
+                    cards:  this.cardlist.value.split('\n')
+                });
+            })
+
+            socket.on('init', (room) => {
+                room.players.forEach(p => {
+                    p.cards.forEach(c => {
+                        let card = createCard(c, p.playername)
+                    })
+                })
+            })
+
+            socket.on('set-deck', data => {
+                
+                console.log(data);
+                data.cards.forEach(c => {
+                    let card = createCard(c, data.playername)
+                })
+            })
+
+            socket.on('move-card', (data) => {
+                let card = document.querySelector('#' + data.cardId);
+                card.style.top = data.top;
+                card.style.left = data.left;
+            })
+        });
+
+        function createCard(c, playername){
+            lastCardId++;
+            let card = document.createElement('img');
+            card.setAttribute('draggable', 'true');
+            card.setAttribute('id', "card-" + lastCardId);
+            card.classList = "card " + playername;
+
+            //pass drag event to socket
+            dragElement(card, (data) => {
+                socket.emit('move-card', data);
+            });
+
+            card.setAttribute('src', c.image_uris.normal)
+            document.querySelector('#board').appendChild(card);
+        }
+
+        function dragElement(elmnt, onMove) {
+            var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            if (document.getElementById(elmnt.id + "header")) {
+                // if present, the header is where you move the DIV from:
+                document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+            } else {
+                // otherwise, move the DIV from anywhere inside the DIV:
+                elmnt.onmousedown = dragMouseDown;
+            }
+
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                // get the mouse cursor position at startup:
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                // call a function whenever the cursor moves:
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                // calculate the new cursor position:
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                // set the element's new position:
+                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+
+                onMove({
+                    cardId: elmnt.id,
+                    top: elmnt.style.top,
+                    left: elmnt.style.left
+                });
+            }
+
+            function closeDragElement() {
+                // stop moving when mouse button is released:
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+            }
+
+    </script>
+
+  </body>
+</html>
