@@ -124,21 +124,28 @@ $(document).ready(() => {
         //menu
         let menu = document.createElement('div');
         menu.className = 'menu';
+
         let flip = document.createElement('button');
         let flipicon = document.createElement('span');
-        flipicon.className = 'fa fa-eye';
+        flipicon.className = 'fa fa-play';
         flip.appendChild(flipicon);
+        menu.appendChild(flip);
+
         let tap = document.createElement('button');
         let tapicon = document.createElement('span');
         tapicon.className = 'fa fa-repeat';
         tap.appendChild(tapicon);
-
-        menu.appendChild(flip);
         menu.appendChild(tap);
+
+        let peek = document.createElement('button');
+        let peekicon = document.createElement('span');
+        peekicon.className = 'fa fa-eye';
+        peek.appendChild(peekicon);
+        menu.appendChild(peek);
 
         container.appendChild(menu);
 
-        cardOuter.addEventListener('click', () => {
+        front.addEventListener('click', () => {
             if(isDragging) return;
             showDetailsModal(cards[card._id]);
         })
@@ -153,6 +160,10 @@ $(document).ready(() => {
             $(container).toggleClass('tap');
             cards[card._id].isTapped = !cards[card._id].isTapped;
             socket.emit('update-card', cards[card._id])
+        })
+
+        peek.addEventListener('click', () => {
+            $(container).toggleClass('peek');
         })
 
         //pass drag event to socket

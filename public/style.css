@@ -1,3 +1,4 @@
+
 .btn-circle.btn-xl {
     width: 70px;
     height: 70px;
@@ -26,7 +27,7 @@ body, html {
 #board{
     width:100vw;
     max-width:100%;  /* added for scroll bar*/ 
-    height:90vh;
+    height:80vh;
     position: relative;
 }
 
@@ -45,9 +46,12 @@ body, html {
 .card {
     perspective: 1000px; /* Remove this if you don't want the 3D effect */
     position: absolute;
-    width:72px;
-    height:100px;
+    width:108px;
+    height:150px;
     transition: transform 0.8s;
+
+    background-color: transparent;
+    border: 1px solid #f1f1f1;
 
 }
 
@@ -61,10 +65,19 @@ body, html {
 
 .card .back {
     transform:rotateY(180deg);
+    background-color: dodgerblue;
+    color: white;
 }
 
 .card.flip .card-inner {
     transform:rotateY(180deg);
+}
+
+.card.peek {
+    border:2px solid red;
+}
+.card.peek .card-inner {
+    transform:rotateY(0deg);
 }
 
 .card.tap .card-outer {
@@ -93,7 +106,7 @@ body, html {
 }
 
 .card .menu button {
-    width:50%;
+    width:33%;
     height:25px;
 }
 
@@ -116,8 +129,8 @@ body, html {
     width:32px;
     height: 32px;
     border-radius: 90%;
-    left:20px;
-    top:10px;
+    left:38px;
+    top:20px;
     
     border: solid 1px #555;
     background-color: #eed;
