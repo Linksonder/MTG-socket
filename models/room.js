@@ -13,6 +13,7 @@ var roomSchema = new mongoose.Schema({
         isTapped: { type: Boolean, default: false },
         left: { type: String, default: 0 },
         top: { type: String, default: 0 },
+        counters: { type: Number, default: 0},
         card: Object
     }],
 });
@@ -36,6 +37,8 @@ roomSchema.statics.updateCard = function(card){
             "cards.$.top": card.top,
             "cards.$.isFlipped": card.isFlipped,
             "cards.$.isTapped": card.isTapped,
+            "cards.$.counters": card.counters,
+
         }
     });
 }

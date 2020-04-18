@@ -64,12 +64,10 @@ io.on('connection', (socket) => {
     })
   })
 
-  socket.on('update-card', (data) => {
-
-    Room.updateCard(data).then(() => {
-
-      console.log("Card updated " + data._id + " tapped: " + data.isTapped + ", " + data.left)
-      socket.broadcast.emit('update-card', data);
+  socket.on('update-card', (card) => {
+    console.log(card.counters);
+    Room.updateCard(card).then(() => {
+      socket.broadcast.emit('update-card', card);
     })
   })
 });

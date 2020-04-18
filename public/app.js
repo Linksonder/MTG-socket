@@ -2,6 +2,8 @@ $(document).ready(() => {
             
     var socket = io();
     var cards = []; //dictionary
+    var isDragging = false;
+    var cardFocus = null;
 
     document.querySelector('#reset-room').addEventListener('click', () => {
         socket.emit('reset-room');
@@ -14,6 +16,19 @@ $(document).ready(() => {
             playerNr: this.playernr.value,
             cards:  this.cardlist.value.split('\n')
         });
+    })
+
+    document.querySelector('#counter-plus').addEventListener('click', (e) =>{
+        cards[cardFocus._id].counters++;
+        socket.emit('update-card', cards[cardFocus._id]);
+        updateCounter(cards[cardFocus._id]);
+
+    })
+
+    document.querySelector('#counter-minus').addEventListener('click', (e) =>{
+        cards[cardFocus._id].counters--;
+        socket.emit('update-card', cards[cardFocus._id]);
+        updateCounter(cards[cardFocus._id]);
     })
 
     socket.on('set-deck', deck => {
@@ -42,8 +57,17 @@ $(document).ready(() => {
         card.isTapped ? container.addClass('tap') : container.removeClass('tap');    
         card.isFlipped ? container.addClass('flip') : container.removeClass('flip');   
         container.css({top: card.top, left: card.left });       
+        updateCounter(cards[cardFocus._id]);
         cards[card._id] = card;                      
     });
+
+    function updateCounter(card){
+        let counter = document.querySelector('#card-' + card._id + " .counter");     
+        let span = document.querySelector('#card-' + card._id + " .counter span");     
+        span.innerText = card.counters;
+        counter.style.visibility = card.counters != 0 ? 'visible' : 'hidden';
+    }
+
 
 
     function resetBoard(){   
@@ -86,12 +110,18 @@ $(document).ready(() => {
 
         cardInner.appendChild(front);
         cardInner.appendChild(back);
-
         cardOuter.appendChild(cardInner);
         container.appendChild(cardOuter);
 
-        //menu
+        let counter = document.createElement('div');
+        counter.className = "counter";
+        let span = document.createElement('span')
+        span.innerText = card.counters;
+        counter.appendChild(span);
+        counter.style.visibility = card.counters != 0 ? 'visible' : 'hidden';
+        container.appendChild(counter);
 
+        //menu
         let menu = document.createElement('div');
         menu.className = 'menu';
         let flip = document.createElement('button');
@@ -108,8 +138,9 @@ $(document).ready(() => {
 
         container.appendChild(menu);
 
-        front.addEventListener('click', () => {
-            $('details').modal('show');
+        cardOuter.addEventListener('click', () => {
+            if(isDragging) return;
+            showDetailsModal(cards[card._id]);
         })
 
         flip.addEventListener('click', () => {
@@ -147,6 +178,12 @@ $(document).ready(() => {
 
     }
 
+    function showDetailsModal(card){
+        cardFocus = card;
+        document.querySelector('#detail-model-image').setAttribute('src', card.card.image_uris.normal);
+        $('#detail-modal').modal('show');
+    }
+
     function dragElement(elmnt, onMove) {
         var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
         if (document.getElementById(elmnt.id + "header")) {
@@ -182,12 +219,14 @@ $(document).ready(() => {
             //callback
             onMove(elmnt.offsetLeft, elmnt.offsetTop);
 
+            isDragging = true;
         }
 
         function closeDragElement() {
             // stop moving when mouse button is released:
             document.onmouseup = null;
             document.onmousemove = null;
+            setTimeout(() => isDragging = false, 0);//the hacks are real
         }
     }
 }); //END OF DOCUMENT READY
