@@ -11,11 +11,12 @@ var roomSchema = new mongoose.Schema({
         playerNr: { type: Number },
         isFlipped: { type: Boolean, default: true},
         isTapped: { type: Boolean, default: false },
-        left: { type: String, default: 0 },
-        top: { type: String, default: 0 },
+        left: { type: Number, default: null },
+        top: { type: Number, default: null },
         counters: { type: Number, default: 0},
         isCommander: { type: Boolean, default: false },
-        card: Object
+        card: Object,
+        order: { type: Number }
     }],
 });
 

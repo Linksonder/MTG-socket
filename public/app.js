@@ -4,6 +4,7 @@ $(document).ready(() => {
     var cards = []; //dictionary
     var isDragging = false;
     var cardFocus = null;
+    var deckFocus = null;
 
     document.querySelector('#reset-room').addEventListener('click', () => {
         socket.emit('reset-room');
@@ -36,7 +37,7 @@ $(document).ready(() => {
     })
 
     socket.on('set-deck', deck => {
-        deck.cards.forEach(c => createCard(c, deck.playerNr))
+        deck.cards.forEach(c => createCard(c))
     })
 
 
@@ -54,14 +55,30 @@ $(document).ready(() => {
     })
 
 
-    socket.on('update-card', (card) => {
+    socket.on('update-card', (card) => updateCard(card));
+
+    function updateCard(card){
         let container = $('#card-' + card._id);            
         card.isTapped ? container.addClass('tap') : container.removeClass('tap');    
-        card.isFlipped ? container.addClass('flip') : container.removeClass('flip');   
-        container.css({top: card.top, left: card.left });       
-        updateCounter(cards[cardFocus._id]);
-        cards[card._id] = card;                      
-    });
+        card.isFlipped ? container.addClass('flip') : container.removeClass('flip');    
+        container.css({'z-index':  card.isCommander ? 1000: card.order });
+        updatePosition(card, container);
+        updateCounter(card);                
+        cards[card._id] = card;         
+    }
+
+    function updatePosition(card, container){
+        
+        
+        if(card.left == null) //No position? Put it on the deck
+        {
+           let deck = document.querySelector('#deck-' + card.playerNr);
+           container.css({top: deck.offsetTop, left: deck.offsetLeft });       
+        }
+        else{
+            container.css({top: card.top, left: card.left });       
+        }
+    }
 
     function updateCounter(card){
         let counter = document.querySelector('#card-' + card._id + " .counter");     
@@ -75,15 +92,31 @@ $(document).ready(() => {
     function resetBoard(){   
         let board = document.querySelector('#board');
         board.innerHTML = '';
-        for(let i = 0; i < 4; i++){
+
+        for(let nr = 1; nr <= 4; nr++){
             let deck = document.createElement('div');
+            let shuffle = document.createElement('button');
+            shuffle.innerText = "shuffle";
+            shuffle.addEventListener('click', function() { socket.emit('shuffle-deck', nr )});
+            shuffle.className = "btn btn-default"
+            deck.appendChild(shuffle);
             deck.className = "deck";
-            deck.setAttribute('id', 'deck-' + (i+1));
+            deck.setAttribute('id', 'deck-' + (nr));
             board.appendChild(deck);
         }
+
+        board.addEventListener('mouseover', (e) => {
+            
+            if(e.target.id.includes("deck")) {
+                deckFocus = e.target;
+            }
+            else {
+                deckFocus = null;
+            }
+        })
     }
 
-    function createCard(card, playerNr){
+    function createCard(card){
 
         cards[card._id] = card;
 
@@ -94,7 +127,7 @@ $(document).ready(() => {
         container.setAttribute('id', 'card-' + card._id); //Card
         container.className += card.isFlipped ? " flip" : "";
         container.className += card.isTapped ? " tap" : "";
-        container.style.zIndex  = card.isCommander ? 1000 : 1; //put the commander on top
+        container.style.zIndex  = card.isCommander ? 1000 : card.order; //put the commander on top
 
         //ui events
         let cardOuter = document.createElement('div');
@@ -170,25 +203,22 @@ $(document).ready(() => {
         })
 
         //pass drag event to socket
-        dragElement(container, (left, top) => {
+        dragElement(container, card.playerNr, (left, top) => {
+            
             cards[card._id].left = left;
             cards[card._id].top = top;
+
+            if(!left || !top){
+                cards[card._id].isFlipped = true;
+                updateCard(cards[card._id]); //move to deck
+            }
+            
             socket.emit('update-card', cards[card._id])
         });
 
-        if(card.left == null)
-        {
-           let deck = document.querySelector('#deck-' + playerNr);
-           container.style.left = deck.offsetLeft + "px";
-           container.style.top = deck.offsetTop + "px";
-            $(container).addClass('flip'); //start face down on deck, except commanders
-        }
-        else{
-            container.style.left = card.left + "px";
-            container.style.top = card.top + "px";
-        }
-
         document.querySelector('#board').appendChild(container);
+        updatePosition(card, $(container));
+
 
     }
 
@@ -198,7 +228,7 @@ $(document).ready(() => {
         $('#detail-modal').modal('show');
     }
 
-    function dragElement(elmnt, onMove) {
+    function dragElement(elmnt, playernr, onMove) {
         var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
         if (document.getElementById(elmnt.id + "header")) {
             // if present, the header is where you move the DIV from:
@@ -217,6 +247,9 @@ $(document).ready(() => {
             document.onmouseup = closeDragElement;
             // call a function whenever the cursor moves:
             document.onmousemove = elementDrag;
+
+            //lift the decks so we can drop them
+            $('#deck-' +  playernr).addClass('lift');
         }
 
         function elementDrag(e) {
@@ -240,6 +273,21 @@ $(document).ready(() => {
             // stop moving when mouse button is released:
             document.onmouseup = null;
             document.onmousemove = null;
+            $('.deck').removeClass('lift');
+
+
+            //snap to deck
+            if(deckFocus){
+
+                //move the card to the deck
+                elmnt.style.top = deckFocus.offsetTop + "px";
+                elmnt.style.left = deckFocus.offsetLeft + "px";
+                
+                //reset the position
+                onMove(null, null);
+                deckFocus = null;
+            }
+
             setTimeout(() => isDragging = false, 0);//the hacks are real
         }
     }

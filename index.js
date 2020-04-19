@@ -42,6 +42,19 @@ io.on('connection', (socket) => {
 
   })
 
+  socket.on('shuffle-deck', (playerNr) => {
+    console.log('shuffling deck');
+    Room.findOne({ _id: 'test'}).then((room) => {
+      room.cards = shuffle(room.cards, playerNr);  
+      room.save(() => {
+        room.cards.forEach(c => {
+          if(c.playerNr == playerNr)
+            io.emit('update-card', c);
+        })
+      });
+    })
+  })
+
   socket.on('set-deck', (request) => {
     
     Room.findOne({ _id: 'test'}).then((room) => {
@@ -60,6 +73,12 @@ io.on('connection', (socket) => {
 
           //yay
           shuffle(room.cards);
+          
+          //set order
+          for(let i = 0; i < room.cards.length; i++){
+            room.cards[i].order = i;
+          }
+          
 
           let commanderId =  mongoose.Types.ObjectId();
 

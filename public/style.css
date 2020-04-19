@@ -34,8 +34,21 @@ body, html {
 .deck{
     border:1px solid black;
     position: absolute;
-    width:72px;
-    height:100px;
+    width:112px;
+    height:150px;
+}
+
+.deck.lift{
+    z-index:9999;
+    border:1px solid red;
+}
+
+.deck button {
+    position: absolute;
+    top:100%;
+    width:100%;
+    border:1px solid black;
+
 }
 
 input.commander{
@@ -75,13 +88,15 @@ input.commander{
 
 .card.flip .card-inner {
     transform:rotateY(180deg);
+    border: 0px;
 }
 
-.card.peek .card-inner {
+.card.peek.flip .card-inner {
     transform:rotateY(0deg);
     border:2px solid red;
-
 }
+
+
 
 .card.tap .card-outer {
     transform:rotateZ(90deg);

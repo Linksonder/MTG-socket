@@ -1,5 +1,5 @@
-module.exports = function (array) {
-    let counter = array.length;
+module.exports = function (cards, playerNr) {
+    let counter = cards.length;
 
     // While there are elements in the array
     while (counter > 0) {
@@ -10,10 +10,20 @@ module.exports = function (array) {
         counter--;
 
         // And swap the last element with it
-        let temp = array[counter];
-        array[counter] = array[index];
-        array[index] = temp;
+        let temp = cards[counter];
+        cards[counter] = cards[index];
+        cards[index] = temp;
     }
 
-    return array;
+    //order all the cards still in the deck for that player
+    let order = 1;
+    cards.forEach((card) => {
+        if(card.playerNr == playerNr && card.left == null)
+        {
+            card.order = order;
+            order++;
+        }
+    })
+
+    return cards;
 }
